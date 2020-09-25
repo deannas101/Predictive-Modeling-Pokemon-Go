@@ -147,7 +147,7 @@ View(catPokemon)
 
 catPokemon %>% mutate_at(vars(1:22), dummyVars())
 
-dmy <- dummyVars(~., data = keptPokemon)
+dmy <- dummyVars("~.", data = keptPokemon)
 dummyVar_Pokemon <- data.frame(predict(dmy, newdata = keptPokemon))
 View(dummyVar_Pokemon)
 
