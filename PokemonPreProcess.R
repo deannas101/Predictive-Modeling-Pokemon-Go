@@ -140,3 +140,14 @@ grid.arrange(boxplotSS_temperature, boxplotSS_windSpeed,boxplotSS_windBearing, b
 #outliers were minimized from pressure, population_density, and gymDistanceKm
 #we still have a lot of outliers for windspeed, gymDistanceKm and pokestopDistanceKm
 
+#---------------------Dummy Variables--------------------------#
+
+catPokemon <- keptPokemon %>% select(appearedTimeOfDay,appearedDayOfWeek,closeToWater, weather, weatherIcon, urban, suburban, midurban, rural, gymIn100m, gymIn250m, gymIn500m, gymIn1000m, gymIn2500m, gymIn5000m, pokestopDistanceKm, pokestopIn100m, pokestopIn250m, pokestopIn500m, pokestopIn1000m, pokestopIn2500m, pokestopIn5000m)
+View(catPokemon)
+
+catPokemon %>% mutate_at(vars(1:22), dummyVars())
+
+dmy <- dummyVars(~., data = keptPokemon)
+dummyVar_Pokemon <- data.frame(predict(dmy, newdata = keptPokemon))
+View(dummyVar_Pokemon)
+
