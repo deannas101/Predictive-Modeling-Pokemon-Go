@@ -26,6 +26,44 @@ apply(skewCheck, 2, skewness)
 
 #skewed values: windSpeed, population_density, gymDistanceKm, pokestopDistanceKm
 
+####Histograms####
+histogram_temperature <- numPokemon %>%
+  ggplot(aes(temperature)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+histogram_windSpeed <- numPokemon %>%
+  ggplot(aes(windSpeed)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+histogram_windBearing <- numPokemon %>%
+  ggplot(aes(windBearing)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+histogram_pressure <- numPokemon %>%
+  ggplot(aes(pressure)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+histogram_population_density <- numPokemon %>%
+  ggplot(aes(population_density)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+histogram_gymDistanceKm <- numPokemon %>%
+  ggplot(aes(gymDistanceKm)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+histogram_pokestopDistanceKm <- numPokemon %>%
+  ggplot(aes(pokestopDistanceKm)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+grid.arrange(histogram_temperature, histogram_windSpeed, histogram_windBearing, histogram_pressure, histogram_population_density, histogram_gymDistanceKm, histogram_pokestopDistanceKm)
+
 ####Dummy Variables####
 
 dmy <- dummyVars("~.", data = keptPokemon)
@@ -40,13 +78,29 @@ windSpeedTrans = predict(numPokemonTrans_windSpeed, dummyVar_Pokemon$windSpeed)
 skewness(windSpeedTrans)
   #1.522345 (used to be 1.5215)
 
+#histogram
+windSpeed_BoxCox <- data.frame(windSpeedTrans)
+View(windSpeed_BoxCox)
+windSpeed_boxcox <- windSpeed_BoxCox %>% 
+  ggplot(aes(windSpeedTrans)) +
+  geom_histogram() +
+  ylab("Frequency")
+
 numPokemonTrans_populationDensity <- BoxCoxTrans(dummyVar_Pokemon$population_density) 
 
 predict(numPokemonTrans_populationDensity, head(dummyVar_Pokemon$population_density))
 populationDensityTrans = predict(numPokemonTrans_populationDensity, dummyVar_Pokemon$population_density)
 skewness(populationDensityTrans)
   #2.708712 (used to be 2.7093953)
-  
+
+#histogram
+populationDensity_BoxCox <- data.frame(populationDensityTrans)
+View(populationDensity_BoxCox)
+populationDensity_boxcox <- populationDensity_BoxCox %>% 
+  ggplot(aes(populationDensityTrans)) +
+  geom_histogram() +
+  ylab("Frequency")
+
 numPokemonTrans_gymDistanceKm <- BoxCoxTrans(dummyVar_Pokemon$gymDistanceKm) 
 
 predict(numPokemonTrans_gymDistanceKm, head(dummyVar_Pokemon$gymDistanceKm))
@@ -54,11 +108,34 @@ gymDistanceKmTrans = predict(numPokemonTrans_gymDistanceKm, dummyVar_Pokemon$gym
 skewness(gymDistanceKmTrans)
   #1.042624 (used to be 43.9522978)
 
+#histogram
+gymDistanceKm_BoxCox <- data.frame(gymDistanceKmTrans)
+View(gymDistanceKm_BoxCox)
+gymDistanceKm_boxcox <- gymDistanceKm_BoxCox %>% 
+  ggplot(aes(gymDistanceKmTrans)) +
+  geom_histogram() +
+  ylab("Frequency")
+
 numPokemonTrans_pokestopDistanceKm <- BoxCoxTrans(dummyVar_Pokemon$pokestopDistanceKm) 
   #error: missing value where TRUE/FALSE needed?? If you understand this error, feel free to fix it!
 predict(numPokemonTrans_pokestopDistanceKm, head(dummyVar_Pokemon$pokestopDistanceKm))
 pokestopDistanceKmTrans = predict(numPokemonTrans_pokestopDistanceKm, dummyVar_Pokemon$pokestopDistanceKm)
 skewness(pokestopDistanceKmTrans)
+
+#histogram
+pokestopDistanceKm_BoxCox <- data.frame(pokestopDistanceKmTrans)
+View(gymDistanceKm_BoxCox)
+pokestopDistanceKm_boxcox <- pokestopDistanceKm_BoxCox %>% 
+  ggplot(aes(pokestopDistanceKmTrans)) +
+  geom_histogram() +
+  ylab("Frequency")
+
+grid.arrange(windSpeed_boxcox, populationDensity_boxcox, gymDistanceKm_boxcox, pokestopDistanceKm_boxcox)
+
+####Center and Scale####
+scaled.centered_Pokemon <- preProcess(numPokemon, method = c("center", "scale"))
+scaled.centered_Pokemon <- predict(scaled.centered_Pokemon, numPokemon)
+View(scaled.centered_Pokemon)
 
 
 ####Boxplots to Look for Outliers####
@@ -139,6 +216,19 @@ grid.arrange(boxplotSS_temperature, boxplotSS_windSpeed,boxplotSS_windBearing, b
 
 #outliers were minimized from pressure, population_density, and gymDistanceKm
 #we still have a lot of outliers for windspeed, gymDistanceKm and pokestopDistanceKm
+
+####Near Zero Variance###
+nearZeroVar(numPokemon)
+
+####PCA####
+pca_Pokemon <- preProcess(numPokemon, method = c("scale", "center", "pca")) #default value is C = 95%
+pca_Pokemon <- predict(pca_Pokemon,numPokemon)
+dim(pca_Pokemon)
+dim(numPokemon)
+summary(pca_Pokemon)
+pca_Pokemon
+#we will not use PCA since it did not reduce the number of our numeric variables
+
 
 ####Data Resampling####
 
