@@ -26,13 +26,13 @@ apply(skewCheck, 2, skewness)
 
 #skewed values: windSpeed, population_density, gymDistanceKm, pokestopDistanceKm
 
-#---------------------Dummy Variables--------------------------#
+####Dummy Variables####
 
 dmy <- dummyVars("~.", data = keptPokemon)
 dummyVar_Pokemon <- data.frame(predict(dmy, newdata = keptPokemon))
 View(dummyVar_Pokemon)
 
-#------------------BoxCoxTrans-------------------------#
+####BoxCoxTrans####
 numPokemonTrans_windSpeed <- BoxCoxTrans(dummyVar_Pokemon$windSpeed) 
 
 predict(numPokemonTrans_windSpeed, head(dummyVar_Pokemon$temperature))
@@ -61,7 +61,7 @@ pokestopDistanceKmTrans = predict(numPokemonTrans_pokestopDistanceKm, dummyVar_P
 skewness(pokestopDistanceKmTrans)
 
 
-#------------------Boxplots to Look for Outliers----------------#
+####Boxplots to Look for Outliers####
 boxplot(dummyVar_Pokemon)
 
 boxplot_temperature <- dummyVar_Pokemon %>% ggplot() +
@@ -95,7 +95,7 @@ boxplot_pokestopDistanceKm <- dummyVar_Pokemon %>% ggplot() +
 grid.arrange(boxplot_temeperature, boxplot_windSpeed,boxplot_windBearing, boxplot_pressure, boxplot_populationDensity,boxplot_gymDistanceKm, boxplot_pokestopDistanceKm )
 
 
-#----------------Spatial Sign to remove outliers---------------------#
+####Spatial Sign to remove outliers####
 spatialSign_numPokemon <- spatialSign(dummyVar_Pokemon)
 spatialSign_numPokemon <- data.frame(spatialSign_numPokemon)
 
@@ -139,3 +139,13 @@ grid.arrange(boxplotSS_temperature, boxplotSS_windSpeed,boxplotSS_windBearing, b
 
 #outliers were minimized from pressure, population_density, and gymDistanceKm
 #we still have a lot of outliers for windspeed, gymDistanceKm and pokestopDistanceKm
+
+####Data Resampling####
+
+#Using the 10 fold cross validation for resampling the large dataset
+#replace preData with the final preprocessed dataset
+
+folds <- createFolds(preData$pokemonId, returnTrain = TRUE)
+str(folds)
+
+splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind,], dat = preData)
