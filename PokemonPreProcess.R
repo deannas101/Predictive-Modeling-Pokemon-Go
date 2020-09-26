@@ -10,12 +10,14 @@ library(tidyverse)
 colnames(Pokemon)
 keptPokemon <- Pokemon[,c(1, 13, 16, 20, 21, 24:29, 38:56)]
 keptPokemon <- keptPokemon %>%
-  drop_na()
+  drop_na() %>%
+  mutate_at(vars(terrainType), as.character)
 colnames(keptPokemon)
 numPokemon <- keptPokemon[,c(1, 7:10, 12, 17, 24)]
 
+
 ####Checking Skewness####
-skewCheck <- dummyVar_Pokemon[,2:8]
+skewCheck <- numPokemon[,2:8]
 skewCheck <- skewCheck %>% 
     scale(center = TRUE, scale = TRUE) %>% 
     as.data.frame() %>%
