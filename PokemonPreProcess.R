@@ -232,10 +232,15 @@ pca_Pokemon
 
 ####Data Resampling####
 
+#data splitting into training dataset
+trainingRows <- createDataPartition(dummyPokemon$pokemonId, p = 0.8, list = FALSE)
+training <- dummyPokemon[trainingRows,]
+
+
 #Using the 10 fold cross validation for resampling the large dataset
 #replace preData with the final preprocessed dataset
 
-folds <- createFolds(preData$pokemonId, returnTrain = TRUE)
+folds <- createFolds(training$pokemonId, returnTrain = TRUE)
 str(folds)
 
-splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind,], dat = preData)
+splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind,], dat = training)
