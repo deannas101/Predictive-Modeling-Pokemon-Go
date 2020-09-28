@@ -217,8 +217,6 @@ grid.arrange(boxplotSS_temperature, boxplotSS_windSpeed,boxplotSS_windBearing, b
 #outliers were minimized from pressure, population_density, and gymDistanceKm
 #we still have a lot of outliers for windspeed, gymDistanceKm and pokestopDistanceKm
 
-####Near Zero Variance###
-nearZeroVar(numPokemon)
 
 ####PCA####
 pca_Pokemon <- preProcess(numPokemon, method = c("scale", "center", "pca")) #default value is C = 95%
@@ -229,6 +227,13 @@ summary(pca_Pokemon)
 pca_Pokemon
 #we will not use PCA since it did not reduce the number of our numeric variables
 
+####Near Zero Variance####
+remove <- nearZeroVar(dummyPokemon)
+dummyPokemonUpdate <- dummyPokemon[,-remove] #reduced to 54 columns
+
+####Check Result Variable####
+#make a histogram of the pokemonID and figure out if its unbalanced
+#I couldn't find any specific code that figures it out from ch3 or 4
 
 ####Data Resampling####
 
