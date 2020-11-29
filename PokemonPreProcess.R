@@ -227,13 +227,23 @@ summary(pca_Pokemon)
 pca_Pokemon
 #we will not use PCA since it did not reduce the number of our numeric variables
 
-####Near Zero Variance####
-remove <- nearZeroVar(dummyPokemon)
-dummyPokemonUpdate <- dummyPokemon[,-remove] #reduced to 54 columns
+####Near Zero Variance#### (Lydia fixed this so that we use cateogrical var's instead of numeric)
+
+#categorical data
+str(dummyPokemon)
+names(dummyPokemon)
+catPokemon <- dummyPokemon[,-c(41:45, 54, 67)]
+#View(catPokemon) #72 columns
+
+#fix near zero var
+z <- nearZeroVar(catPokemon)
+categoricalPokemon <- catPokemon[,-z]
+#View(categoricalPokemon) #reduced to 41 columns
 
 ####Check Result Variable####
 #make a histogram of the pokemonID and figure out if its unbalanced
 #I couldn't find any specific code that figures it out from ch3 or 4
+    #I made a bar plot and table of the pokemonID under data splitting below (line 276) -Lydia
 
 ####Data Resampling####
 
@@ -249,3 +259,116 @@ folds <- createFolds(training$pokemonId, returnTrain = TRUE)
 str(folds)
 
 splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind,], dat = training)
+                         
+
+#Lydia's Code 11/28                        
+##Splitting into training and testing##
+
+#predictors
+numPokemon <- spatialSign_Pokemon
+predictors <- data.frame(numPokemon, categoricalPokemon)
+#View(predictors) #295,982 observations since dropped 39 NA values
+
+#response
+response <- Pokemon %>% select("pokemonId")
+response <- data.frame(response)
+#View(response) #296,021 observations
+
+#visualizing response variable
+response.table <- table(response)
+#View(response.table)
+ggplot(response, aes(pokemonId)) +
+  geom_bar() #can conclude that response is not spread out evenly, so should partition based on classes
+
+#splitting data
+set.seed(1234)
+trainingRows.pokemon <- createDataPartition(response$pokemonId, p = .80, list= FALSE)
+
+trainPredictors.pokemon <- predictors[trainingRows.pokemon, ]
+trainResponse.pokemon <- response[trainingRows.pokemon]
+
+testPredictors.pokemon <- predictors[-trainingRows.pokemon, ]
+testResponse.pokemon <- response[-trainingRows.pokemon]
+str(trainPredictors.pokemon) #236819 observations, 48 columns
+str(testPredictors.pokemon) #59197 observations, 48 columns
+trainResponse.pokemon <- as.factor(trainResponse.pokemon)
+testResponse.pokemon <- as.factor(testResponse.pokemon)
+
+##Modeling## *need to fix variable names - getting an error when running models stating invalid variable name?
+
+#Logistic Regression
+ctrl.pokemon <- trainControl(method = "LGOCV",
+                             summaryFunction = defaultSummary,
+                             classProbs = TRUE,
+                             savePredictions = TRUE)
+set.seed(1234)
+logisticReg.pokemon <- train(trainPredictors.pokemon,
+                             y = trainResponse.pokemon,
+                             method = "glm",
+                             metric = "Kappa",
+                             trControl = ctrl.pokemon,
+                             tuneLength = 1,
+                             trace = FALSE)
+logisticReg.pokemon
+
+confusionMatrix(data = logisticReg.pokemon$pred$pred,
+                reference = logisticReg.pokemon$pred$obs)
+
+#Linear Discriminant Analysis
+ctrl.pokemon <- trainControl(method = "LGOCV",
+                             summaryFunction = defaultSummary,
+                             classProbs = TRUE,
+                             savePredictions = TRUE)
+set.seed(1234)
+LDAFull.pokemon <- train(trainPredictors.pokemon,
+                         y = trainResponse.pokemon,
+                         method = "lda",
+                         metric = "Kappa",
+                         trControl = ctrl.pokemon)
+LDAFull.pokemon
+
+#confusion matrix
+confusionMatrix(data = LDAFull.pokemon$pred$pred,
+                reference = LDAFull.pokemon$pred$obs)
+
+#Partial Least Squares Discriminant Analysis
+ctrl <- trainControl(summaryFunction = defaultSummary,
+                     classProbs = TRUE)
+set.seed(1234)
+plsFit.pokemon <- train(x = trainPredictors.pokemon,
+                        y = trainResponse.pokemon,
+                        method = "pls",
+                        tuneGrid = expand.grid(.ncomp = 1:20),
+                        preProc = c("center","scale"),
+                        metric = "Kappa",
+                        trControl = ctrl,
+                        maxit = 100)
+
+plsFit.pokemon
+
+plot(plsFit.pokemon, main = "Plot of PLS Discriminant Analysis")
+
+confusionMatrix(data = plsFit.pokemon, #might need to change to predicted
+                reference = testResponse.pokemon)
+
+#Penalized Model
+ctrl.penalized <- trainControl(method = "LGOCV",
+                               summaryFunction = defaultSummary,
+                               classProbs = TRUE,
+                               ##index = list(simulatedTest[,1:4]),
+                               savePredictions = TRUE)
+
+glmnGrid <- expand.grid(.alpha = c(0, .1, .2, .4, .6, .8, 1),
+                        .lambda = seq(.01, .2, length = 10))
+set.seed(123)
+glmnTuned.pokemon <- train(x=trainPredictors.pokemon,
+                           y = trainResponse.pokemon,
+                           method = "glmnet",
+                           tuneGrid = glmnGrid,
+                           preProc = c("center", "scale"),
+                           metric = "Kappa",
+                           trControl = ctrl.penalized)
+glmnTuned.pokemon
+
+confusionMatrix(data = glmnTuned.pokemonc$pred$pred,
+                reference = glmnTuned.pokemon$pred$obs) 
