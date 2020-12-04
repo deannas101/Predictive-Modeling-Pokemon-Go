@@ -46,6 +46,16 @@ spatial_sign <- spatialSign(scaled_centered_pokemon)
 prepared_pokemon <- data.frame(spatial_sign)
 # columns:31
 
+# Turning pokemon ID into pokemon names ---------------------------------------
+
+response_pokemon[response_pokemon == 1] <- "Bulbasaur"
+response_pokemon[response_pokemon == 2] <- "Ivysaur"
+response_pokemon[response_pokemon == 3] <- "Venusaur"
+response_pokemon[response_pokemon == 4] <- "Charmander"
+response_pokemon[response_pokemon == 5] <- "Charmeleon"
+response_pokemon[response_pokemon == 6] <- "Charizard"
+response_pokemon[response_pokemon == 1] <- "Bulbasaur"
+
 # Data Splitting ---------------------------------------------------------------
 
 # Check Response Balance
@@ -69,48 +79,48 @@ testing_response <- as.factor(testing_response)
 
 # Linear Classification Models -------------------------------------------------
 
-## Modeling## *need to fix variable names - getting an error when running models stating invalid variable name?
-
 # Logistic Regression
-ctrl.pokemon <- trainControl(
+ctrl <- trainControl(
   method = "LGOCV",
   summaryFunction = defaultSummary,
   classProbs = TRUE,
   savePredictions = TRUE
 )
+
+### this one is giving me problems
 set.seed(1234)
-logisticReg.pokemon <- train(trainPredictors.pokemon,
-  y = trainResponse.pokemon,
+logistic_regression <- train(training_predictors,
+  y = training_response,
   method = "glm",
-  metric = "Kappa",
-  trControl = ctrl.pokemon,
-  tuneLength = 1,
-  trace = FALSE
+  metric = "kappa",
+  trControl = ctrl
 )
-logisticReg.pokemon
+
+logistic_regression
 
 confusionMatrix(
-  data = logisticReg.pokemon$pred$pred,
-  reference = logisticReg.pokemon$pred$obs
+  data = logistic_regression$pred$pred,
+  reference = logistic_regression$pred$obs
 )
 
 # Linear Discriminant Analysis
-ctrl.pokemon <- trainControl(
+ctrl <- trainControl(
   method = "LGOCV",
   summaryFunction = defaultSummary,
   classProbs = TRUE,
   savePredictions = TRUE
 )
+
 set.seed(1234)
-LDAFull.pokemon <- train(trainPredictors.pokemon,
-  y = trainResponse.pokemon,
+lda_model <- train(training_predictors,
+  y = training_response,
   method = "lda",
   metric = "Kappa",
-  trControl = ctrl.pokemon
+  trControl = ctrl
 )
+
 LDAFull.pokemon
 
-# confusion matrix
 confusionMatrix(
   data = LDAFull.pokemon$pred$pred,
   reference = LDAFull.pokemon$pred$obs
