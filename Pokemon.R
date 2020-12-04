@@ -3,372 +3,210 @@ library(caret)
 library(e1071)
 library(tidyverse)
 
-#PreProcessing the Pokemon Data
-#Pokemon is the name of the original dataset
+# PreProcessing the Pokemon Data ----------------------------------------------
+# Pokemon is the name of the original dataset
+# start with 208 columns
 
-####Selecting Columns####
-colnames(Pokemon)
-keptPokemon <- Pokemon[,c(1, 13, 16, 20, 21, 24:29, 38:56)]
-keptPokemon <- keptPokemon %>%
+# Selecting Columns and Remove NAs
+kept_pokemon <- Pokemon[, c(1, 13, 16, 20, 21, 24:29, 38:56)]
+kept_pokemon <- kept_pokemon %>%
   drop_na() %>%
   mutate_at(vars(terrainType), as.character)
-colnames(keptPokemon)
-numPokemon <- keptPokemon[,c(1, 7:10, 12, 17, 24)]
+colnames(kept_pokemon)
+response_pokemon <- kept_pokemon[, 1]
+dirty_pokemon <- kept_pokemon[, -1]
+# columns: 30
 
+# Dummy Variables
+dmy <- dummyVars("~.", data = dirty_pokemon)
+dummy_pokemon <- data.frame(predict(dmy, newdata = dirty_pokemon))
+# columns: 100
 
-####Checking Skewness####
-skewCheck <- numPokemon[,2:8]
-skewCheck <- skewCheck %>% 
-    scale(center = TRUE, scale = TRUE) %>% 
-    as.data.frame() %>%
-    drop_na() #drops observations with missing values to calculate skewness
-apply(skewCheck, 2, skewness)
+# Near Zero Variance
+zed <- nearZeroVar(dummy_pokemon)
+non_zed_pokemon <- dummy_pokemon[, -zed]
+#columns: 57
 
-#skewed values: windSpeed, population_density, gymDistanceKm, pokestopDistanceKm
+###not sure if we need boxcox or not, have both options
+###currently running without boxocx
 
-####Histograms####
-histogram_temperature <- numPokemon %>%
-  ggplot(aes(temperature)) +
-  geom_histogram() +
-  ylab("Frequency")
+# Center, Scale, PCA
+scaled_centered <- preProcess(non_zed_pokemon, method = c("center", "scale", "pca"))
+scaled_centered_pokemon <- predict(scaled_centered, non_zed_pokemon)
+#columns: 31
 
-histogram_windSpeed <- numPokemon %>%
-  ggplot(aes(windSpeed)) +
-  geom_histogram() +
-  ylab("Frequency")
+# Center, Scale, BoxCox, PCA
+scaled_centered_transformed <- preProcess(non_zed_pokemon, method = c("center", "scale", "BoxCox", "pca"))
+scaled_centered_transformed_pokemon <- predict(scaled_centered_transformed, non_zed_pokemon)
+#columns: ?
 
-histogram_windBearing <- numPokemon %>%
-  ggplot(aes(windBearing)) +
-  geom_histogram() +
-  ylab("Frequency")
+# Spatial Sign
+spatial_sign <- spatialSign(scaled_centered_pokemon)
+spatial_pokemon <- data.frame(spatial_sign)
+# columns:31
 
-histogram_pressure <- numPokemon %>%
-  ggplot(aes(pressure)) +
-  geom_histogram() +
-  ylab("Frequency")
+# Add response variable back into data
+prepared_pokemon <- response_pokemon
+prepared_pokemon[, 2:32] <- spatial_pokemon
 
-histogram_population_density <- numPokemon %>%
-  ggplot(aes(population_density)) +
-  geom_histogram() +
-  ylab("Frequency")
+# Data Splitting ---------------------------------------------------------------
 
-histogram_gymDistanceKm <- numPokemon %>%
-  ggplot(aes(gymDistanceKm)) +
-  geom_histogram() +
-  ylab("Frequency")
+# Check Response Balance
+ggplot(data = prepared_pokemon)
 
-histogram_pokestopDistanceKm <- numPokemon %>%
-  ggplot(aes(pokestopDistanceKm)) +
-  geom_histogram() +
-  ylab("Frequency")
+#### Check Result Variable####
+# make a histogram of the pokemonID and figure out if its unbalanced
+# I couldn't find any specific code that figures it out from ch3 or 4
+# I made a bar plot and table of the pokemonID under data splitting below (line 276) -Lydia
 
-grid.arrange(histogram_temperature, histogram_windSpeed, histogram_windBearing, histogram_pressure, histogram_population_density, histogram_gymDistanceKm, histogram_pokestopDistanceKm)
+#### Data Resampling####
 
-####Dummy Variables####
-
-dmy <- dummyVars("~.", data = keptPokemon)
-dummyVar_Pokemon <- data.frame(predict(dmy, newdata = keptPokemon))
-View(dummyVar_Pokemon)
-
-####BoxCoxTrans####
-numPokemonTrans_windSpeed <- BoxCoxTrans(dummyVar_Pokemon$windSpeed) 
-
-predict(numPokemonTrans_windSpeed, head(dummyVar_Pokemon$temperature))
-windSpeedTrans = predict(numPokemonTrans_windSpeed, dummyVar_Pokemon$windSpeed)
-skewness(windSpeedTrans)
-  #1.522345 (used to be 1.5215)
-
-#histogram
-windSpeed_BoxCox <- data.frame(windSpeedTrans)
-View(windSpeed_BoxCox)
-windSpeed_boxcox <- windSpeed_BoxCox %>% 
-  ggplot(aes(windSpeedTrans)) +
-  geom_histogram() +
-  ylab("Frequency")
-
-numPokemonTrans_populationDensity <- BoxCoxTrans(dummyVar_Pokemon$population_density) 
-
-predict(numPokemonTrans_populationDensity, head(dummyVar_Pokemon$population_density))
-populationDensityTrans = predict(numPokemonTrans_populationDensity, dummyVar_Pokemon$population_density)
-skewness(populationDensityTrans)
-  #2.708712 (used to be 2.7093953)
-
-#histogram
-populationDensity_BoxCox <- data.frame(populationDensityTrans)
-View(populationDensity_BoxCox)
-populationDensity_boxcox <- populationDensity_BoxCox %>% 
-  ggplot(aes(populationDensityTrans)) +
-  geom_histogram() +
-  ylab("Frequency")
-
-numPokemonTrans_gymDistanceKm <- BoxCoxTrans(dummyVar_Pokemon$gymDistanceKm) 
-
-predict(numPokemonTrans_gymDistanceKm, head(dummyVar_Pokemon$gymDistanceKm))
-gymDistanceKmTrans = predict(numPokemonTrans_gymDistanceKm, dummyVar_Pokemon$gymDistanceKm)
-skewness(gymDistanceKmTrans)
-  #1.042624 (used to be 43.9522978)
-
-#histogram
-gymDistanceKm_BoxCox <- data.frame(gymDistanceKmTrans)
-View(gymDistanceKm_BoxCox)
-gymDistanceKm_boxcox <- gymDistanceKm_BoxCox %>% 
-  ggplot(aes(gymDistanceKmTrans)) +
-  geom_histogram() +
-  ylab("Frequency")
-
-numPokemonTrans_pokestopDistanceKm <- BoxCoxTrans(dummyVar_Pokemon$pokestopDistanceKm) 
-  #error: missing value where TRUE/FALSE needed?? If you understand this error, feel free to fix it!
-predict(numPokemonTrans_pokestopDistanceKm, head(dummyVar_Pokemon$pokestopDistanceKm))
-pokestopDistanceKmTrans = predict(numPokemonTrans_pokestopDistanceKm, dummyVar_Pokemon$pokestopDistanceKm)
-skewness(pokestopDistanceKmTrans)
-
-#histogram
-pokestopDistanceKm_BoxCox <- data.frame(pokestopDistanceKmTrans)
-View(gymDistanceKm_BoxCox)
-pokestopDistanceKm_boxcox <- pokestopDistanceKm_BoxCox %>% 
-  ggplot(aes(pokestopDistanceKmTrans)) +
-  geom_histogram() +
-  ylab("Frequency")
-
-grid.arrange(windSpeed_boxcox, populationDensity_boxcox, gymDistanceKm_boxcox, pokestopDistanceKm_boxcox)
-
-####Center and Scale####
-scaled.centered_Pokemon <- preProcess(numPokemon, method = c("center", "scale"))
-scaled.centered_Pokemon <- predict(scaled.centered_Pokemon, numPokemon)
-View(scaled.centered_Pokemon)
-
-
-####Boxplots to Look for Outliers####
-boxplot(dummyVar_Pokemon)
-
-boxplot_temperature <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(temperature)) +
-  coord_flip()
-
-boxplot_windSpeed <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(windSpeed)) +
-  coord_flip()
-
-boxplot_windBearing <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(windBearing)) +
-  coord_flip()
-
-boxplot_pressure <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(pressure)) +
-  coord_flip()
-
-boxplot_populationDensity <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(population_density)) +
-  coord_flip()
-
-boxplot_gymDistanceKm <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(gymDistanceKm)) +
-  coord_flip()
-
-boxplot_pokestopDistanceKm <- dummyVar_Pokemon %>% ggplot() +
-  geom_boxplot(aes(pokestopDistanceKm)) +
-  coord_flip()
-
-grid.arrange(boxplot_temeperature, boxplot_windSpeed,boxplot_windBearing, boxplot_pressure, boxplot_populationDensity,boxplot_gymDistanceKm, boxplot_pokestopDistanceKm )
-
-
-####Spatial Sign to remove outliers####
-spatialSign_numPokemon <- spatialSign(dummyVar_Pokemon)
-spatialSign_numPokemon <- data.frame(spatialSign_numPokemon)
-
-#boxplots to see if outliers were removed
-boxplotSS_temperature <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(temperature)) +
-  coord_flip()
-
-boxplotSS_windSpeed <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(windSpeed)) +
-  coord_flip()
-
-boxplotSS_windBearing <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(windBearing)) +
-  coord_flip()
-
-boxplotSS_pressure <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(pressure)) +
-  coord_flip()
-
-boxplotSS_populationDensity <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(population_density)) +
-  coord_flip()
-
-boxplotSS_gymDistanceKm <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(gymDistanceKm)) +
-  coord_flip()
-
-boxplotSS_pokestopDistanceKm <- spatialSign_numPokemon %>% 
-  ggplot() +
-  geom_boxplot(aes(pokestopDistanceKm)) +
-  coord_flip()
-
-grid.arrange(boxplotSS_temperature, boxplotSS_windSpeed,boxplotSS_windBearing, boxplotSS_pressure, boxplotSS_populationDensity,boxplotSS_gymDistanceKm, boxplotSS_pokestopDistanceKm )
-
-#outliers were minimized from pressure, population_density, and gymDistanceKm
-#we still have a lot of outliers for windspeed, gymDistanceKm and pokestopDistanceKm
-
-
-####PCA####
-pca_Pokemon <- preProcess(numPokemon, method = c("scale", "center", "pca")) #default value is C = 95%
-pca_Pokemon <- predict(pca_Pokemon,numPokemon)
-dim(pca_Pokemon)
-dim(numPokemon)
-summary(pca_Pokemon)
-pca_Pokemon
-#we will not use PCA since it did not reduce the number of our numeric variables
-
-####Near Zero Variance#### (Lydia fixed this so that we use cateogrical var's instead of numeric)
-
-#categorical data
-str(dummyPokemon)
-names(dummyPokemon)
-catPokemon <- dummyPokemon[,-c(41:45, 54, 67)]
-#View(catPokemon) #72 columns
-
-#fix near zero var
-z <- nearZeroVar(catPokemon)
-categoricalPokemon <- catPokemon[,-z]
-#View(categoricalPokemon) #reduced to 41 columns
-
-####Check Result Variable####
-#make a histogram of the pokemonID and figure out if its unbalanced
-#I couldn't find any specific code that figures it out from ch3 or 4
-    #I made a bar plot and table of the pokemonID under data splitting below (line 276) -Lydia
-
-####Data Resampling####
-
-#data splitting into training dataset
+# data splitting into training dataset
 trainingRows <- createDataPartition(dummyPokemon$pokemonId, p = 0.8, list = FALSE)
-training <- dummyPokemon[trainingRows,]
+training <- dummyPokemon[trainingRows, ]
 
 
-#Using the 10 fold cross validation for resampling the large dataset
-#replace preData with the final preprocessed dataset
+# Using the 10 fold cross validation for resampling the large dataset
+# replace preData with the final preprocessed dataset
 
 folds <- createFolds(training$pokemonId, returnTrain = TRUE)
 str(folds)
 
-splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind,], dat = training)
-                         
+splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind, ], dat = training)
 
-#Lydia's Code 11/28                        
-##Splitting into training and testing##
 
-#predictors
+# Lydia's Code 11/28
+## Splitting into training and testing##
+
+# predictors
 numPokemon <- spatialSign_Pokemon
 predictors <- data.frame(numPokemon, categoricalPokemon)
-#View(predictors) #295,982 observations since dropped 39 NA values
+# View(predictors) #295,982 observations since dropped 39 NA values
 
-#response
+# response
 response <- Pokemon %>% select("pokemonId")
 response <- data.frame(response)
-#View(response) #296,021 observations
+# View(response) #296,021 observations
 
-#visualizing response variable
+# visualizing response variable
 response.table <- table(response)
-#View(response.table)
+# View(response.table)
 ggplot(response, aes(pokemonId)) +
-  geom_bar() #can conclude that response is not spread out evenly, so should partition based on classes
+  geom_bar() # can conclude that response is not spread out evenly, so should partition based on classes
 
-#splitting data
+# splitting data
 set.seed(1234)
-trainingRows.pokemon <- createDataPartition(response$pokemonId, p = .80, list= FALSE)
+trainingRows.pokemon <- createDataPartition(response$pokemonId, p = .80, list = FALSE)
 
 trainPredictors.pokemon <- predictors[trainingRows.pokemon, ]
 trainResponse.pokemon <- response[trainingRows.pokemon]
 
 testPredictors.pokemon <- predictors[-trainingRows.pokemon, ]
 testResponse.pokemon <- response[-trainingRows.pokemon]
-str(trainPredictors.pokemon) #236819 observations, 48 columns
-str(testPredictors.pokemon) #59197 observations, 48 columns
+str(trainPredictors.pokemon) # 236819 observations, 48 columns
+str(testPredictors.pokemon) # 59197 observations, 48 columns
 trainResponse.pokemon <- as.factor(trainResponse.pokemon)
 testResponse.pokemon <- as.factor(testResponse.pokemon)
 
-##Modeling## *need to fix variable names - getting an error when running models stating invalid variable name?
+## Modeling## *need to fix variable names - getting an error when running models stating invalid variable name?
 
-#Logistic Regression
-ctrl.pokemon <- trainControl(method = "LGOCV",
-                             summaryFunction = defaultSummary,
-                             classProbs = TRUE,
-                             savePredictions = TRUE)
+# Logistic Regression
+ctrl.pokemon <- trainControl(
+  method = "LGOCV",
+  summaryFunction = defaultSummary,
+  classProbs = TRUE,
+  savePredictions = TRUE
+)
 set.seed(1234)
 logisticReg.pokemon <- train(trainPredictors.pokemon,
-                             y = trainResponse.pokemon,
-                             method = "glm",
-                             metric = "Kappa",
-                             trControl = ctrl.pokemon,
-                             tuneLength = 1,
-                             trace = FALSE)
+  y = trainResponse.pokemon,
+  method = "glm",
+  metric = "Kappa",
+  trControl = ctrl.pokemon,
+  tuneLength = 1,
+  trace = FALSE
+)
 logisticReg.pokemon
 
-confusionMatrix(data = logisticReg.pokemon$pred$pred,
-                reference = logisticReg.pokemon$pred$obs)
+confusionMatrix(
+  data = logisticReg.pokemon$pred$pred,
+  reference = logisticReg.pokemon$pred$obs
+)
 
-#Linear Discriminant Analysis
-ctrl.pokemon <- trainControl(method = "LGOCV",
-                             summaryFunction = defaultSummary,
-                             classProbs = TRUE,
-                             savePredictions = TRUE)
+# Linear Discriminant Analysis
+ctrl.pokemon <- trainControl(
+  method = "LGOCV",
+  summaryFunction = defaultSummary,
+  classProbs = TRUE,
+  savePredictions = TRUE
+)
 set.seed(1234)
 LDAFull.pokemon <- train(trainPredictors.pokemon,
-                         y = trainResponse.pokemon,
-                         method = "lda",
-                         metric = "Kappa",
-                         trControl = ctrl.pokemon)
+  y = trainResponse.pokemon,
+  method = "lda",
+  metric = "Kappa",
+  trControl = ctrl.pokemon
+)
 LDAFull.pokemon
 
-#confusion matrix
-confusionMatrix(data = LDAFull.pokemon$pred$pred,
-                reference = LDAFull.pokemon$pred$obs)
+# confusion matrix
+confusionMatrix(
+  data = LDAFull.pokemon$pred$pred,
+  reference = LDAFull.pokemon$pred$obs
+)
 
-#Partial Least Squares Discriminant Analysis
-ctrl <- trainControl(summaryFunction = defaultSummary,
-                     classProbs = TRUE)
+# Partial Least Squares Discriminant Analysis
+ctrl <- trainControl(
+  summaryFunction = defaultSummary,
+  classProbs = TRUE
+)
 set.seed(1234)
-plsFit.pokemon <- train(x = trainPredictors.pokemon,
-                        y = trainResponse.pokemon,
-                        method = "pls",
-                        tuneGrid = expand.grid(.ncomp = 1:20),
-                        preProc = c("center","scale"),
-                        metric = "Kappa",
-                        trControl = ctrl,
-                        maxit = 100)
+plsFit.pokemon <- train(
+  x = trainPredictors.pokemon,
+  y = trainResponse.pokemon,
+  method = "pls",
+  tuneGrid = expand.grid(.ncomp = 1:20),
+  preProc = c("center", "scale"),
+  metric = "Kappa",
+  trControl = ctrl,
+  maxit = 100
+)
 
 plsFit.pokemon
 
 plot(plsFit.pokemon, main = "Plot of PLS Discriminant Analysis")
 
-confusionMatrix(data = plsFit.pokemon, #might need to change to predicted
-                reference = testResponse.pokemon)
+confusionMatrix(
+  data = plsFit.pokemon, # might need to change to predicted
+  reference = testResponse.pokemon
+)
 
-#Penalized Model
-ctrl.penalized <- trainControl(method = "LGOCV",
-                               summaryFunction = defaultSummary,
-                               classProbs = TRUE,
-                               ##index = list(simulatedTest[,1:4]),
-                               savePredictions = TRUE)
+# Penalized Model
+ctrl.penalized <- trainControl(
+  method = "LGOCV",
+  summaryFunction = defaultSummary,
+  classProbs = TRUE,
+  ## index = list(simulatedTest[,1:4]),
+  savePredictions = TRUE
+)
 
-glmnGrid <- expand.grid(.alpha = c(0, .1, .2, .4, .6, .8, 1),
-                        .lambda = seq(.01, .2, length = 10))
+glmnGrid <- expand.grid(
+  .alpha = c(0, .1, .2, .4, .6, .8, 1),
+  .lambda = seq(.01, .2, length = 10)
+)
 set.seed(123)
-glmnTuned.pokemon <- train(x=trainPredictors.pokemon,
-                           y = trainResponse.pokemon,
-                           method = "glmnet",
-                           tuneGrid = glmnGrid,
-                           preProc = c("center", "scale"),
-                           metric = "Kappa",
-                           trControl = ctrl.penalized)
+glmnTuned.pokemon <- train(
+  x = trainPredictors.pokemon,
+  y = trainResponse.pokemon,
+  method = "glmnet",
+  tuneGrid = glmnGrid,
+  preProc = c("center", "scale"),
+  metric = "Kappa",
+  trControl = ctrl.penalized
+)
 glmnTuned.pokemon
 
-confusionMatrix(data = glmnTuned.pokemonc$pred$pred,
-                reference = glmnTuned.pokemon$pred$obs) 
+confusionMatrix(
+  data = glmnTuned.pokemonc$pred$pred,
+  reference = glmnTuned.pokemon$pred$obs
+)
