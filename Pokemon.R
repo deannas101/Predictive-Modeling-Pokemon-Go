@@ -25,20 +25,20 @@ dummy_pokemon <- data.frame(predict(dmy, newdata = dirty_pokemon))
 # Near Zero Variance
 zed <- nearZeroVar(dummy_pokemon)
 non_zed_pokemon <- dummy_pokemon[, -zed]
-#columns: 57
+# columns: 57
 
-###not sure if we need boxcox or not, have both options
-###currently running without boxocx
+### not sure if we need boxcox or not, have both options
+### currently running without boxocx
 
 # Center, Scale, PCA
 scaled_centered <- preProcess(non_zed_pokemon, method = c("center", "scale", "pca"))
 scaled_centered_pokemon <- predict(scaled_centered, non_zed_pokemon)
-#columns: 31
+# columns: 31
 
 # Center, Scale, BoxCox, PCA
 scaled_centered_transformed <- preProcess(non_zed_pokemon, method = c("center", "scale", "BoxCox", "pca"))
 scaled_centered_transformed_pokemon <- predict(scaled_centered_transformed, non_zed_pokemon)
-#columns: ?
+# columns: ?
 
 # Spatial Sign
 spatial_sign <- spatialSign(scaled_centered_pokemon)
