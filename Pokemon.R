@@ -42,71 +42,36 @@ scaled_centered_transformed_pokemon <- predict(scaled_centered_transformed, non_
 
 # Spatial Sign
 spatial_sign <- spatialSign(scaled_centered_pokemon)
-spatial_pokemon <- data.frame(spatial_sign)
+prepared_pokemon <- data.frame(spatial_sign)
 # columns:31
 
 # Add response variable back into data
 prepared_pokemon <- response_pokemon
 prepared_pokemon[, 2:32] <- spatial_pokemon
+prepared_pokemon <- as.data.frame(prepared_pokemon)
 
 # Data Splitting ---------------------------------------------------------------
 
 # Check Response Balance
-ggplot(data = prepared_pokemon)
+ggplot(data = response_pokemon) +
+  geom_bar(aes(pokemonId)) +
+  labs(x = "Pokemon ID", y = "Frequency", title = "Distribution of Pokemon ID")
 
-#### Check Result Variable####
-# make a histogram of the pokemonID and figure out if its unbalanced
-# I couldn't find any specific code that figures it out from ch3 or 4
-# I made a bar plot and table of the pokemonID under data splitting below (line 276) -Lydia
-
-#### Data Resampling####
-
-# data splitting into training dataset
-trainingRows <- createDataPartition(dummyPokemon$pokemonId, p = 0.8, list = FALSE)
-training <- dummyPokemon[trainingRows, ]
-
-
-# Using the 10 fold cross validation for resampling the large dataset
-# replace preData with the final preprocessed dataset
-
-folds <- createFolds(training$pokemonId, returnTrain = TRUE)
-str(folds)
-
-splitUpPokemon <- lapply(folds, function(ind, dat) dat[ind, ], dat = training)
-
-
-# Lydia's Code 11/28
-## Splitting into training and testing##
-
-# predictors
-numPokemon <- spatialSign_Pokemon
-predictors <- data.frame(numPokemon, categoricalPokemon)
-# View(predictors) #295,982 observations since dropped 39 NA values
-
-# response
-response <- Pokemon %>% select("pokemonId")
-response <- data.frame(response)
-# View(response) #296,021 observations
-
-# visualizing response variable
-response.table <- table(response)
-# View(response.table)
-ggplot(response, aes(pokemonId)) +
-  geom_bar() # can conclude that response is not spread out evenly, so should partition based on classes
-
-# splitting data
+# Data Splitting using Stratified Random Sampling
 set.seed(1234)
-trainingRows.pokemon <- createDataPartition(response$pokemonId, p = .80, list = FALSE)
 
-trainPredictors.pokemon <- predictors[trainingRows.pokemon, ]
-trainResponse.pokemon <- response[trainingRows.pokemon]
+training_rows <- createDataPartition(response_pokemon$pokemonId, p = .80, list = FALSE)
 
-testPredictors.pokemon <- predictors[-trainingRows.pokemon, ]
-testResponse.pokemon <- response[-trainingRows.pokemon]
-str(trainPredictors.pokemon) # 236819 observations, 48 columns
-str(testPredictors.pokemon) # 59197 observations, 48 columns
-trainResponse.pokemon <- as.factor(trainResponse.pokemon)
-testResponse.pokemon <- as.factor(testResponse.pokemon)
+training_predictors <- prepared_pokemon[training_rows, ]
+training_response <- response_pokemon[training_rows, ]
+
+testing_predictors <- prepared_pokemon[-training_rows, ] # obs: columns:
+testing_response <- response_pokemon[-training_rows, ] # obs: columns:
+
+training_response <- as.factor(training_response)
+testing_response <- as.factor(testing_response)
+
+# Linear Classification Models -------------------------------------------------
 
 ## Modeling## *need to fix variable names - getting an error when running models stating invalid variable name?
 
