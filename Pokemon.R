@@ -14,6 +14,7 @@ kept_pokemon <- kept_pokemon %>%
   mutate_at(vars(terrainType), as.character)
 colnames(kept_pokemon)
 response_pokemon <- kept_pokemon[, 1]
+response_pokemon <- as.data.frame(response_pokemon)
 dirty_pokemon <- kept_pokemon[, -1]
 # columns: 30
 
@@ -45,11 +46,6 @@ spatial_sign <- spatialSign(scaled_centered_pokemon)
 prepared_pokemon <- data.frame(spatial_sign)
 # columns:31
 
-# Add response variable back into data
-prepared_pokemon <- response_pokemon
-prepared_pokemon[, 2:32] <- spatial_pokemon
-prepared_pokemon <- as.data.frame(prepared_pokemon)
-
 # Data Splitting ---------------------------------------------------------------
 
 # Check Response Balance
@@ -62,11 +58,11 @@ set.seed(1234)
 
 training_rows <- createDataPartition(response_pokemon$pokemonId, p = .80, list = FALSE)
 
-training_predictors <- prepared_pokemon[training_rows, ]
-training_response <- response_pokemon[training_rows, ]
+training_predictors <- prepared_pokemon[training_rows, ] # obs: 236786 columns: 31
+training_response <- response_pokemon[training_rows, ] # obs: 23676 columns: 1
 
-testing_predictors <- prepared_pokemon[-training_rows, ] # obs: columns:
-testing_response <- response_pokemon[-training_rows, ] # obs: columns:
+testing_predictors <- prepared_pokemon[-training_rows, ] # obs: 59196 columns: 31
+testing_response <- response_pokemon[-training_rows, ] # obs: 59196 columns: 1
 
 training_response <- as.factor(training_response)
 testing_response <- as.factor(testing_response)
