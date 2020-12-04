@@ -6,3 +6,6 @@ the dataset is too big to upload at once, so future sets and subsets will need t
 The land modis info for the terrainType predictor (classification 1-4): https://yceo.yale.edu/modis-land-cover-product-mcd12q1
 
 r style guide: https://style.tidyverse.org/
+
+pokedex for pokemon ID: https://pokemon.gameinfo.io/
+ note: dataset only includes 1st generation pokemon (kanto)
