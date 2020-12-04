@@ -8,3 +8,4 @@ The land modis info for the terrainType predictor (classification 1-4): https://
 r style guide: https://style.tidyverse.org/
 
 pokedex for pokemon ID: https://pokemon.gameinfo.io/
+ note: dataset only includes 1st generation pokemon (kanto)
