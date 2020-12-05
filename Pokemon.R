@@ -202,24 +202,27 @@ ggplot(data = response_pokemon) +
 # Data Splitting using Stratified Random Sampling
 set.seed(1234)
 
-training_rows <- createDataPartition(response_pokemon$pokemonId, p = .80, list = FALSE)
+subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .50, list = FALSE)
+response_subset <- response_pokemon[subset_rows, ]
+pokemon_subset <- prepared_pokemon[subset_rows, ]
 
-training_predictors <- prepared_pokemon[training_rows, ] # obs: 236786 columns: 31
-training_response <- response_pokemon[training_rows, ] # obs: 23676 columns: 1
+training_rows <- createDataPartition(response_subset$pokemonId, p = .80, list = FALSE)
 
-testing_predictors <- prepared_pokemon[-training_rows, ] # obs: 59196 columns: 31
-testing_response <- response_pokemon[-training_rows, ] # obs: 59196 columns: 1
+training_predictors <- pokemon_subset[training_rows, ] # obs: 236786 columns: 31
+training_response <- response_subset[training_rows, ] # obs: 23676 columns: 1
+
+testing_predictors <- pokemon_subset[-training_rows, ] # obs: 59196 columns: 31
+testing_response <- response_subset[-training_rows, ] # obs: 59196 columns: 1
 
 training_response <- as.factor(training_response)
 testing_response <- as.factor(testing_response)
 
 # Linear Classification Models -------------------------------------------------
 
-# Logistic Regression THIS DOESN'T WORK
+# Logistic Regression
 ctrl <- trainControl(
   method = "cv",
   summaryFunction = defaultSummary,
-  # classProbs = TRUE,
   savePredictions = TRUE
 )
 
@@ -229,8 +232,8 @@ logistic_regression <- train(training_predictors,
   method = "multinom",
   metric = "Kappa",
   trControl = ctrl,
-  #maxit = 5,
- # MaxNWts = 4752
+  maxit = 5,
+  MaxNWts = 4896
 )
 
 logistic_regression
@@ -258,8 +261,9 @@ confusionMatrix(
 
 # Partial Least Squares Discriminant Analysis
 ctrl <- trainControl(
-  summaryFunction = multiClassSummary
+  summaryFunction = defaultSummary
 )
+
 set.seed(1234)
 pls_model <- train(
   x = training_predictors,
@@ -277,13 +281,13 @@ plot(pls_model, main = "Plot of PLS Discriminant Analysis")
 
 confusionMatrix(
   data = pls_model$pred$pred,
-  reference = pls_model$pred$obs
+   reference = pls_model$pred$obs
 )
 
 # Penalized Model
 ctrl <- trainControl(
   method = "LGOCV",
-  summaryFunction = multiClassSummary,
+  summaryFunction = defaultSummary,
   savePredictions = TRUE
 )
 
