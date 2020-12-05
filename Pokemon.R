@@ -242,6 +242,8 @@ logistic_regression <- train(training_predictors,
 
 logistic_regression
 
+plot(logistic_regression, main = "Plot of Logistic Regression")
+
 confusionMatrix(
   data = logistic_regression$pred$pred,
   reference = logistic_regression$pred$obs
@@ -257,6 +259,8 @@ lda_model <- train(training_predictors,
 )
 
 lda_model
+
+plot(lda_model, main = "Plot of Linear Discriminant Analysis")
 
 confusionMatrix(
   data = lda_model$pred$pred,
@@ -313,6 +317,8 @@ penalized_model <- train(
 
 penalized_model
 
+plot(penalized_model, main = "Plot of Penalized Model")
+
 confusionMatrix(
   data = penalized_model$pred$pred,
   reference = penalized_model$pred$obs
@@ -339,6 +345,8 @@ qda_model <- train(
 
 qda_model
 
+plot(qda_model, main = "Plot of Quadratic Regularized Discriminant Analysis")
+
 confusionMatrix(
   data = qda_model$pred$pred,
   reference = qda_model$pred$obs
@@ -357,6 +365,8 @@ rda_model <- train(
 
 rda_model
 
+plot(rda_model, main = "Plot of Regularized Discriminant Analysis")
+
 confusionMatrix(
   data = rda_model$pred$pred,
   reference = rda_model$pred$obs
@@ -374,6 +384,8 @@ mda_model <- train(
 )
 
 mda_model
+
+plot(mda_model, main = "Plot of Mixture Discriminant Analysis")
 
 confusionMatrix(
   data = mda_model$pred$pred,
@@ -406,6 +418,8 @@ nnet_model <- train(
 
 nnet_model
 
+plot(nnet_model, main = "Plot of Neural Networks")
+
 confusionMatrix(
   data = nnet_model$pred$pred,
   reference = nnet_model$pred$obs
@@ -424,7 +438,9 @@ fda_model <- train(
   trControl = ctrl_nonLinear_models
 )
 
-nnet_model
+fda_model
+
+plot(fda_model, main = "Plot of Flexible Discriminant Analysis")
 
 confusionMatrix(
   data = fda_model$pred$pred,
