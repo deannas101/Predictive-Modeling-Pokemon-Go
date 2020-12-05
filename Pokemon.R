@@ -352,14 +352,14 @@ confusionMatrix(
   reference = qda_model$pred$obs
 )
 
-# Regularized Discriminant Analysis TUNEGRID NEEDS TO BE BIGGER
+# Regularized Discriminant Analysis RETURNING ONLY ZEROS FOR ACCURACY AND KAPPA
 set.seed(123)
 rda_model <- train(
   x = training_predictors,
   y = training_response,
   method = "rda",
   metric = "Kappa",
-  tuneGrid = expand.grid(.lambda = 1:10, .gamma = 1:10),
+  tuneGrid = expand.grid(.lambda = 1:3, .gamma = 1:3),
   trControl = ctrl_nonLinear_models
 )
 
