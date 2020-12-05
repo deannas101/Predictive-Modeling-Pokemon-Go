@@ -203,7 +203,7 @@ ggplot(data = response_pokemon) +
 # Data Splitting using Stratified Random Sampling
 set.seed(1234)
 
-subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .25, list = FALSE)
+subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .01, list = FALSE)
 response_subset <- response_pokemon[subset_rows, ]
 pokemon_subset <- prepared_pokemon[subset_rows, ]
 
@@ -326,13 +326,13 @@ confusionMatrix(
 
 # Non-Linear Classification Models --------------------------------------------
 
-# Quadratic Regularized Discriminant Analysis
+# Quadratic Regularized Discriminant Analysis NEEDS BIGGER THAN 0.1 SUBSET
 ctrl_nonLinear_models <- trainControl(
-  method = "cv",
+  method = "LGOCV",
   number = 10,
   classProbs = FALSE,
   savePredictions = TRUE,
-  summaryFunction = multiClassSummary
+  summaryFunction = defaultSummary
 )
 set.seed(123)
 qda_model <- train(
@@ -352,14 +352,14 @@ confusionMatrix(
   reference = qda_model$pred$obs
 )
 
-# Regularized Discriminant Analysis
+# Regularized Discriminant Analysis TUNEGRID NEEDS TO BE BIGGER
 set.seed(123)
 rda_model <- train(
   x = training_predictors,
   y = training_response,
   method = "rda",
   metric = "Kappa",
-  tuneGrid = expand.grid(.lambda = 1:3, .gamma = 1:3),
+  tuneGrid = expand.grid(.lambda = 1:10, .gamma = 1:10),
   trControl = ctrl_nonLinear_models
 )
 
@@ -394,11 +394,11 @@ confusionMatrix(
 
 # Neural Networks
 ctrl_nonLinear_models <- trainControl(
-  method = "cv",
+  method = "LGOCV",
   number = 10,
   classProbs = FALSE,
   savePredictions = TRUE,
-  summaryFunction = multiClassSummary
+  summaryFunction = defaultSummary
 )
 nnetGrid <- expand.grid(.size = 1:10, .decay = c(0, .1, 1, 2))
 maxSize <- max(nnetGrid$.size)
@@ -493,7 +493,7 @@ confusionMatrix(
 # Naive Bayes
 set.seed(123)
 nb_model <- train( x = training_predictors, 
-                y = trianing_response,
+                y = training_response,
                 method = "nb",
                 metric = "Kappa",
                 ##tuneGrid = data.frame(.k = c(4*(0:5)+1, 20*(1:5)+1, 50*(2:9)+1)), ## 21 is the best
