@@ -321,10 +321,112 @@ confusionMatrix(
 # Non-Linear Classification Models --------------------------------------------
 
 # Quadratic Regularized Discriminant Analysis
+ctrl_nonLinear_models <- trainControl(method = "cv", 
+                                      number = 10,
+                                      classProbs = FALSE, 
+                                      savePredictions = TRUE,
+                                      summaryFunction = multiClassSummary
+) 
+set.seed(123)
+qda_model <- train(x = training_predictors, 
+                y = training_response,
+                method = "qda",
+                metric = "Kappa",
+                trControl = ctrl_nonLinear_models
+)
+
+qda_model
+
+confusionMatrix(
+  data = qda_model$pred$pred,
+  reference = qda_model$pred$obs
+)
+
+# Regularized Discriminant Analysis
+set.seed(123)
+rda_model <- train(x = training_predictors, 
+                   y = training_response,
+                   method = "rda",
+                   metric = "Kappa",
+                   tuneGrid = expand.grid(.lambda = 1:3, .gamma = 1:3),
+                   trControl = ctrl_nonLinear_models
+)
+
+rda_model
+
+confusionMatrix(
+  data = rda_model$pred$pred,
+  reference = rda_model$pred$obs
+)
+
+# Mixture Discriminant Analysis
+set.seed(123)
+mda_model <- train(x = training_predictors, 
+                   y = training_response,
+                   method = "mda",
+                   metric = "Kappa",
+                   tuneGrid = expand.grid(.subclasses = 1:3),
+                   trControl = ctrl_nonLinear_models
+)
+
+mda_model
+
+confusionMatrix(
+  data = mda_model$pred$pred,
+  reference = mda_model$pred$obs
+)
 
 # Neural Networks
+ctrl_nonLinear_models <- trainControl(method = "cv", 
+                                      number = 10,
+                                      classProbs = FALSE, 
+                                      savePredictions = TRUE,
+                                      summaryFunction = multiClassSummary
+) 
+nnetGrid <- expand.grid(.size = 1:10, .decay = c(0, .1, 1, 2))
+maxSize <- max(nnetGrid$.size)
+numWts <- (maxSize * (31 + 1) + (maxSize+1)*144) ## 31 is the number of predictors, 144 classes (pokemon IDs)
+
+nnet_model <- train(x = training_predictors, 
+                 y = training_response,
+                 method = "nnet",
+                 metric = "Kappa",
+                 tuneGrid = nnetGrid,
+                 trace = FALSE,
+                 maxit = 100,
+                 MaxNWts = numWts,
+                 trControl = ctrl_nonLinear_models
+)
+
+nnet_model
+
+confusionMatrix(
+  data = nnet_model$pred$pred,
+  reference = nnet_model$pred$obs
+)
+
 
 # Flexible Discriminant Analysis
+marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:38)
+
+library(earth)
+library(Formula)
+library(plotmo)
+library(TeachingDemos)
+set.seed(1234)
+fda_model <- train(x = training_predictors, 
+                  y = training_response,
+                  method = "fda",
+                  tuneGrid = marsGrid,
+                  trControl = ctrl_nonLinear_models
+)
+
+nnet_model
+
+confusionMatrix(
+  data = fda_model$pred$pred,
+  reference = fda_model$pred$obs
+)
 
 # Support Vector Machines
 
