@@ -1,6 +1,7 @@
 library(AppliedPredictiveModeling)
 library(caret)
 library(e1071)
+library(gdata)
 library(tidyverse)
 
 # PreProcessing the Pokemon Data ----------------------------------------------
@@ -202,7 +203,7 @@ ggplot(data = response_pokemon) +
 # Data Splitting using Stratified Random Sampling
 set.seed(1234)
 
-subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .50, list = FALSE)
+subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .01, list = FALSE)
 response_subset <- response_pokemon[subset_rows, ]
 pokemon_subset <- prepared_pokemon[subset_rows, ]
 
@@ -262,9 +263,10 @@ confusionMatrix(
   reference = lda_model$pred$obs
 )
 
-# Partial Least Squares Discriminant Analysis NEEDS SMALLER SAMPLE SIZE
+# Partial Least Squares Discriminant Analysis
 ctrl <- trainControl(
-  summaryFunction = defaultSummary
+  summaryFunction = defaultSummary,
+  savePredictions = TRUE
 )
 
 set.seed(1234)
@@ -275,7 +277,7 @@ pls_model <- train(
   tuneGrid = expand.grid(.ncomp = 1:20),
   metric = "Kappa",
   trControl = ctrl,
-  maxit = 1000
+  maxit = 10000
 )
 
 pls_model
@@ -287,7 +289,7 @@ confusionMatrix(
    reference = pls_model$pred$obs
 )
 
-# Penalized Model
+# Penalized Model eRROR: NO CLASS CAN HAVE 1 OR 0 OBSERVATIONS
 ctrl <- trainControl(
   method = "LGOCV",
   summaryFunction = defaultSummary,
