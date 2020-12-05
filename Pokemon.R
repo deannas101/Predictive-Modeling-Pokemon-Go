@@ -76,10 +76,10 @@ response_pokemon[response_pokemon == 25] <- "Pikachu"
 response_pokemon[response_pokemon == 26] <- "Raichu"
 response_pokemon[response_pokemon == 27] <- "Sandshrew"
 response_pokemon[response_pokemon == 28] <- "Sandslash"
-response_pokemon[response_pokemon == 29] <- "Nidoran - F"
+response_pokemon[response_pokemon == 29] <- "NidoranF"
 response_pokemon[response_pokemon == 30] <- "Nidorina"
 response_pokemon[response_pokemon == 31] <- "Nidoqueen"
-response_pokemon[response_pokemon == 32] <- "Nidoran - M"
+response_pokemon[response_pokemon == 32] <- "NidoranM"
 response_pokemon[response_pokemon == 33] <- "Nidorino"
 response_pokemon[response_pokemon == 34] <- "Nidoking"
 response_pokemon[response_pokemon == 35] <- "Clefairy"
@@ -169,7 +169,7 @@ response_pokemon[response_pokemon == 118] <- "Goldeen"
 response_pokemon[response_pokemon == 119] <- "Seaking"
 response_pokemon[response_pokemon == 120] <- "Staryu"
 response_pokemon[response_pokemon == 121] <- "Starmie"
-response_pokemon[response_pokemon == 122] <- "Mr. Mime"
+response_pokemon[response_pokemon == 122] <- "MrMime"
 response_pokemon[response_pokemon == 123] <- "Scyther"
 response_pokemon[response_pokemon == 124] <- "Jynx"
 response_pokemon[response_pokemon == 125] <- "Electabuzz"
@@ -223,21 +223,22 @@ testing_response <- as.factor(testing_response)
 
 # Linear Classification Models -------------------------------------------------
 
-# Logistic Regression
+# Logistic Regression THIS DOESN'T WORK
 ctrl <- trainControl(
   method = "LGOCV",
-  summaryFunction = defaultSummary,
-  classProbs = TRUE,
+  summaryFunction = multiClassSummary,
+  # classProbs = TRUE,
   savePredictions = TRUE
 )
 
-### this one is giving me problems
 set.seed(1234)
 logistic_regression <- train(training_predictors,
   y = training_response,
-  method = "glm",
-  metric = "kappa",
-  trControl = ctrl
+  method = "multinom",
+  metric = "Kappa",
+  trControl = ctrl,
+  maxit = 5,
+  MaxNWts = 4752
 )
 
 logistic_regression
@@ -248,13 +249,6 @@ confusionMatrix(
 )
 
 # Linear Discriminant Analysis
-ctrl <- trainControl(
-  method = "LGOCV",
-  summaryFunction = defaultSummary,
-  classProbs = TRUE,
-  savePredictions = TRUE
-)
-
 set.seed(1234)
 lda_model <- train(training_predictors,
   y = training_response,
@@ -263,45 +257,41 @@ lda_model <- train(training_predictors,
   trControl = ctrl
 )
 
-LDAFull.pokemon
+lda_model
 
 confusionMatrix(
-  data = LDAFull.pokemon$pred$pred,
-  reference = LDAFull.pokemon$pred$obs
+  data = lda_model$pred$pred,
+  reference = lda_model$pred$obs
 )
 
 # Partial Least Squares Discriminant Analysis
 ctrl <- trainControl(
-  summaryFunction = defaultSummary,
-  classProbs = TRUE
+  summaryFunction = multiClassSummary
 )
 set.seed(1234)
-plsFit.pokemon <- train(
-  x = trainPredictors.pokemon,
-  y = trainResponse.pokemon,
+pls_model <- train(
+  x = training_predictors,
+  y = training_response,
   method = "pls",
   tuneGrid = expand.grid(.ncomp = 1:20),
-  preProc = c("center", "scale"),
   metric = "Kappa",
   trControl = ctrl,
-  maxit = 100
+  maxit = 1000
 )
 
-plsFit.pokemon
+pls_model
 
-plot(plsFit.pokemon, main = "Plot of PLS Discriminant Analysis")
+plot(pls_model, main = "Plot of PLS Discriminant Analysis")
 
 confusionMatrix(
-  data = plsFit.pokemon, # might need to change to predicted
-  reference = testResponse.pokemon
+  data = pls_model$pred$pred,
+  reference = pls_model$pred$obs
 )
 
 # Penalized Model
-ctrl.penalized <- trainControl(
+ctrl <- trainControl(
   method = "LGOCV",
-  summaryFunction = defaultSummary,
-  classProbs = TRUE,
-  ## index = list(simulatedTest[,1:4]),
+  summaryFunction = multiClassSummary,
   savePredictions = TRUE
 )
 
@@ -310,18 +300,32 @@ glmnGrid <- expand.grid(
   .lambda = seq(.01, .2, length = 10)
 )
 set.seed(123)
-glmnTuned.pokemon <- train(
-  x = trainPredictors.pokemon,
-  y = trainResponse.pokemon,
+penalized_model <- train(
+  x = training_predictors,
+  y = training_response,
   method = "glmnet",
   tuneGrid = glmnGrid,
-  preProc = c("center", "scale"),
   metric = "Kappa",
-  trControl = ctrl.penalized
+  trControl = ctrl
 )
-glmnTuned.pokemon
+
+penalized_model
 
 confusionMatrix(
-  data = glmnTuned.pokemonc$pred$pred,
-  reference = glmnTuned.pokemon$pred$obs
+  data = penalized_model$pred$pred,
+  reference = penalized_model$pred$obs
 )
+
+# Non-Linear Classification Models --------------------------------------------
+
+# Quadratic Regularized Discriminant Analysis
+
+# Neural Networks
+
+# Flexible Discriminant Analysis
+
+# Support Vector Machines
+
+# K-Nearest Neighbors
+
+# Naive Bayes
