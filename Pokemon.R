@@ -222,9 +222,9 @@ testing_response <- as.factor(testing_response)
 
 # Linear Classification Models -------------------------------------------------
 
-# Logistic Regression
+# Logistic Regression STILL NOT WORKING
 ctrl <- trainControl(
-  method = "cv",
+  method = "LGOCV",
   summaryFunction = defaultSummary,
   savePredictions = TRUE
 )
@@ -262,7 +262,7 @@ confusionMatrix(
   reference = lda_model$pred$obs
 )
 
-# Partial Least Squares Discriminant Analysis
+# Partial Least Squares Discriminant Analysis NEEDS SMALLER SAMPLE SIZE
 ctrl <- trainControl(
   summaryFunction = defaultSummary
 )
