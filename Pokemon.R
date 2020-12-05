@@ -223,7 +223,7 @@ testing_response <- as.factor(testing_response)
 
 # Linear Classification Models -------------------------------------------------
 
-# Logistic Regression STILL NOT WORKING
+# Logistic Regression WORKS ON A TEENY SAMPLE SO IT'LL TAKE TIME
 ctrl <- trainControl(
   method = "LGOCV",
   summaryFunction = defaultSummary,
@@ -263,7 +263,7 @@ confusionMatrix(
   reference = lda_model$pred$obs
 )
 
-# Partial Least Squares Discriminant Analysis
+# Partial Least Squares Discriminant Analysis WORKS ON A TEENY SAMPLE SO IT'LL TAKE TIME
 ctrl <- trainControl(
   summaryFunction = defaultSummary,
   savePredictions = TRUE
@@ -289,7 +289,7 @@ confusionMatrix(
    reference = pls_model$pred$obs
 )
 
-# Penalized Model eRROR: NO CLASS CAN HAVE 1 OR 0 OBSERVATIONS
+# Penalized Model ERROR: NO CLASS CAN HAVE 1 OR 0 OBSERVATIONS
 ctrl <- trainControl(
   method = "LGOCV",
   summaryFunction = defaultSummary,
