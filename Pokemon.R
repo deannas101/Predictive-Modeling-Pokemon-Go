@@ -286,7 +286,7 @@ plot(pls_model, main = "Plot of PLS Discriminant Analysis")
 
 confusionMatrix(
   data = pls_model$pred$pred,
-   reference = pls_model$pred$obs
+  reference = pls_model$pred$obs
 )
 
 # Penalized Model ERROR: NO CLASS CAN HAVE 1 OR 0 OBSERVATIONS
@@ -321,18 +321,20 @@ confusionMatrix(
 # Non-Linear Classification Models --------------------------------------------
 
 # Quadratic Regularized Discriminant Analysis
-ctrl_nonLinear_models <- trainControl(method = "cv", 
-                                      number = 10,
-                                      classProbs = FALSE, 
-                                      savePredictions = TRUE,
-                                      summaryFunction = multiClassSummary
-) 
+ctrl_nonLinear_models <- trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = FALSE,
+  savePredictions = TRUE,
+  summaryFunction = multiClassSummary
+)
 set.seed(123)
-qda_model <- train(x = training_predictors, 
-                y = training_response,
-                method = "qda",
-                metric = "Kappa",
-                trControl = ctrl_nonLinear_models
+qda_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "qda",
+  metric = "Kappa",
+  trControl = ctrl_nonLinear_models
 )
 
 qda_model
@@ -344,12 +346,13 @@ confusionMatrix(
 
 # Regularized Discriminant Analysis
 set.seed(123)
-rda_model <- train(x = training_predictors, 
-                   y = training_response,
-                   method = "rda",
-                   metric = "Kappa",
-                   tuneGrid = expand.grid(.lambda = 1:3, .gamma = 1:3),
-                   trControl = ctrl_nonLinear_models
+rda_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "rda",
+  metric = "Kappa",
+  tuneGrid = expand.grid(.lambda = 1:3, .gamma = 1:3),
+  trControl = ctrl_nonLinear_models
 )
 
 rda_model
@@ -361,12 +364,13 @@ confusionMatrix(
 
 # Mixture Discriminant Analysis
 set.seed(123)
-mda_model <- train(x = training_predictors, 
-                   y = training_response,
-                   method = "mda",
-                   metric = "Kappa",
-                   tuneGrid = expand.grid(.subclasses = 1:3),
-                   trControl = ctrl_nonLinear_models
+mda_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "mda",
+  metric = "Kappa",
+  tuneGrid = expand.grid(.subclasses = 1:3),
+  trControl = ctrl_nonLinear_models
 )
 
 mda_model
@@ -377,25 +381,27 @@ confusionMatrix(
 )
 
 # Neural Networks
-ctrl_nonLinear_models <- trainControl(method = "cv", 
-                                      number = 10,
-                                      classProbs = FALSE, 
-                                      savePredictions = TRUE,
-                                      summaryFunction = multiClassSummary
-) 
+ctrl_nonLinear_models <- trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = FALSE,
+  savePredictions = TRUE,
+  summaryFunction = multiClassSummary
+)
 nnetGrid <- expand.grid(.size = 1:10, .decay = c(0, .1, 1, 2))
 maxSize <- max(nnetGrid$.size)
-numWts <- (maxSize * (31 + 1) + (maxSize+1)*144) ## 31 is the number of predictors, 144 classes (pokemon IDs)
+numWts <- (maxSize * (31 + 1) + (maxSize + 1) * 144) ## 31 is the number of predictors, 144 classes (pokemon IDs)
 
-nnet_model <- train(x = training_predictors, 
-                 y = training_response,
-                 method = "nnet",
-                 metric = "Kappa",
-                 tuneGrid = nnetGrid,
-                 trace = FALSE,
-                 maxit = 100,
-                 MaxNWts = numWts,
-                 trControl = ctrl_nonLinear_models
+nnet_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "nnet",
+  metric = "Kappa",
+  tuneGrid = nnetGrid,
+  trace = FALSE,
+  maxit = 100,
+  MaxNWts = numWts,
+  trControl = ctrl_nonLinear_models
 )
 
 nnet_model
@@ -410,11 +416,12 @@ confusionMatrix(
 marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:38)
 
 set.seed(1234)
-fda_model <- train(x = training_predictors, 
-                  y = training_response,
-                  method = "fda",
-                  tuneGrid = marsGrid,
-                  trControl = ctrl_nonLinear_models
+fda_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "fda",
+  tuneGrid = marsGrid,
+  trControl = ctrl_nonLinear_models
 )
 
 nnet_model
