@@ -448,7 +448,64 @@ confusionMatrix(
 )
 
 # Support Vector Machines
+sigmaRangeReduced <- sigest(as.matrix(training_predictors))
+svmRGridReduced <- expand.grid(.sigma = sigmaRangeReduced[1],
+                               .C = 2^(seq(-4, 6)))
+set.seed(123)
+svm_model <- train(x = training_predictors, 
+                   y = training_response,
+                   method = "svmRadial",
+                   metric = "Kappa",
+                   tuneGrid = svmRGridReduced,
+                   fit = FALSE,
+                   trainControl = ctrl_nonLinear_models
+)
+
+svm_model
+
+plot(svm_model, main = "Plot of Support Vector Machine")
+
+confusionMatrix(
+  data = svm_model$pred$pred,
+  reference = svm_model$pred$obs
+)
 
 # K-Nearest Neighbors
+set.seed(123)
+knn_model <- train(x = training_predictors, 
+                y = training_response,
+                method = "knn",
+                metric = "Kappa",
+                ##tuneGrid = data.frame(.k = c(4*(0:5)+1, 20*(1:5)+1, 50*(2:9)+1)), ## 21 is the best
+                tuneGrid = data.frame(.k = 1:50),
+                trControl = ctrl_nonLinear_models
+)
+
+knn_model
+
+plot(knn_model, main = "Plot of K-Nearest Neighbors")
+
+confusionMatrix(
+  data = knn_model$pred$pred,
+  reference = knn_model$pred$obs
+)
 
 # Naive Bayes
+set.seed(123)
+nb_model <- train( x = training_predictors, 
+                y = trianing_response,
+                method = "nb",
+                metric = "Kappa",
+                ##tuneGrid = data.frame(.k = c(4*(0:5)+1, 20*(1:5)+1, 50*(2:9)+1)), ## 21 is the best
+                tuneGrid = data.frame(.fL = 2,.usekernel = TRUE,.adjust = TRUE),
+                trControl = ctrl_nonLinear_models
+)
+
+nb_model
+
+plot(nb_model, main = "Plot of Naive Bayes")
+
+confusionMatrix(
+  data = nb_model$pred$pred,
+  reference = nb_model$pred$obs
+)
