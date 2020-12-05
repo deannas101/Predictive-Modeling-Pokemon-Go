@@ -395,7 +395,7 @@ nnet_model <- train(x = training_predictors,
                  trace = FALSE,
                  maxit = 100,
                  MaxNWts = numWts,
-                 trControl = ctrl_nonLinear_model
+                 trControl = ctrl_nonLinear_models
 )
 
 nnet_model
