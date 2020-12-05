@@ -1,7 +1,7 @@
 library(AppliedPredictiveModeling)
 library(caret)
+library(earth)
 library(e1071)
-library(gdata)
 library(tidyverse)
 
 # PreProcessing the Pokemon Data ----------------------------------------------
@@ -203,7 +203,7 @@ ggplot(data = response_pokemon) +
 # Data Splitting using Stratified Random Sampling
 set.seed(1234)
 
-subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .01, list = FALSE)
+subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .25, list = FALSE)
 response_subset <- response_pokemon[subset_rows, ]
 pokemon_subset <- prepared_pokemon[subset_rows, ]
 
@@ -409,10 +409,6 @@ confusionMatrix(
 # Flexible Discriminant Analysis
 marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:38)
 
-library(earth)
-library(Formula)
-library(plotmo)
-library(TeachingDemos)
 set.seed(1234)
 fda_model <- train(x = training_predictors, 
                   y = training_response,
