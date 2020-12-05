@@ -28,18 +28,10 @@ zed <- nearZeroVar(dummy_pokemon)
 non_zed_pokemon <- dummy_pokemon[, -zed]
 # columns: 57
 
-### not sure if we need boxcox or not, have both options
-### currently running without boxocx
-
 # Center, Scale, PCA
 scaled_centered <- preProcess(non_zed_pokemon, method = c("center", "scale", "pca"))
 scaled_centered_pokemon <- predict(scaled_centered, non_zed_pokemon)
 # columns: 31
-
-# Center, Scale, BoxCox, PCA
-scaled_centered_transformed <- preProcess(non_zed_pokemon, method = c("center", "scale", "BoxCox", "pca"))
-scaled_centered_transformed_pokemon <- predict(scaled_centered_transformed, non_zed_pokemon)
-# columns: ?
 
 # Spatial Sign
 spatial_sign <- spatialSign(scaled_centered_pokemon)
@@ -225,8 +217,8 @@ testing_response <- as.factor(testing_response)
 
 # Logistic Regression THIS DOESN'T WORK
 ctrl <- trainControl(
-  method = "LGOCV",
-  summaryFunction = multiClassSummary,
+  method = "cv",
+  summaryFunction = defaultSummary,
   # classProbs = TRUE,
   savePredictions = TRUE
 )
@@ -237,8 +229,8 @@ logistic_regression <- train(training_predictors,
   method = "multinom",
   metric = "Kappa",
   trControl = ctrl,
-  maxit = 5,
-  MaxNWts = 4752
+  #maxit = 5,
+ # MaxNWts = 4752
 )
 
 logistic_regression
