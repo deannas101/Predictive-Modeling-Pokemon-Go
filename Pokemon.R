@@ -206,6 +206,9 @@ subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .50, list = F
 response_subset <- response_pokemon[subset_rows, ]
 pokemon_subset <- prepared_pokemon[subset_rows, ]
 
+response_subset <- as.data.frame(response_subset)
+colnames(response_subset) <- "pokemonId"
+
 training_rows <- createDataPartition(response_subset$pokemonId, p = .80, list = FALSE)
 
 training_predictors <- pokemon_subset[training_rows, ] # obs: 236786 columns: 31
