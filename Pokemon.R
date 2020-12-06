@@ -2,6 +2,7 @@ library(AppliedPredictiveModeling)
 library(caret)
 library(earth)
 library(e1071)
+library(kernlab)
 library(tidyverse)
 
 # PreProcessing the Pokemon Data ----------------------------------------------
@@ -427,7 +428,7 @@ confusionMatrix(
 
 
 # Flexible Discriminant Analysis
-marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:38)
+marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:35)
 
 set.seed(1234)
 fda_model <- train(
@@ -490,13 +491,12 @@ confusionMatrix(
   reference = knn_model$pred$obs
 )
 
-# Naive Bayes
+# Naive Bayes NEED TO REMOVE SINGLE OBSERVATIONS
 set.seed(123)
 nb_model <- train( x = training_predictors, 
                 y = training_response,
                 method = "nb",
                 metric = "Kappa",
-                ##tuneGrid = data.frame(.k = c(4*(0:5)+1, 20*(1:5)+1, 50*(2:9)+1)), ## 21 is the best
                 tuneGrid = data.frame(.fL = 2,.usekernel = TRUE,.adjust = TRUE),
                 trControl = ctrl_nonLinear_models
 )
