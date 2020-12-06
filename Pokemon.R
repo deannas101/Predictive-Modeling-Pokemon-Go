@@ -340,7 +340,7 @@ confusionMatrix(
 
 # Non-Linear Classification Models --------------------------------------------
 
-# Quadratic Regularized Discriminant Analysis NEEDS BIGGER THAN 0.1 SUBSET
+# Quadratic Regularized Discriminant Analysis NEEDS TO REMOVE SINGLE RECORD CLASSES
 ctrl_nonLinear_models <- trainControl(
   method = "LGOCV",
   number = 10,
@@ -393,7 +393,7 @@ mda_model <- train(
   y = training_response,
   method = "mda",
   metric = "Kappa",
-  tuneGrid = expand.grid(.subclasses = 1:3),
+  tuneGrid = expand.grid(.subclasses = 1:10),
   trControl = ctrl_nonLinear_models
 )
 
