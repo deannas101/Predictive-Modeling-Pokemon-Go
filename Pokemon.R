@@ -223,21 +223,21 @@ training_response <- as.factor(training_response)
 testing_response <- as.factor(testing_response)
 
 #removing observations that only occur once
-training_response_single_observations <- training_response_d %>%
+combined_training <- data.frame(training_response, training_predictors)
+
+training_single_observations <- combined_training %>%
   group_by(training_response) %>%
   tally() %>%
   filter(n == 1) %>%
   select(-n)
 
-c <- as.character(training_response_single_observations$training_response)
+c <- as.character(training_single_observations$training_response)
 
-training_response_no_single_obersvations <-  training_response_d %>%
-  filter(response_pokemon != c)
+reduced_training <- combined_training[!combined_training$training_response %in% c, ]
 
-reduced_response <- training_response %>%
-  filter(training_response != c)
-reduced_predictors <- training_predictors %>%
-  filter(training_predictors != c)
+reduced_training_response <- reduced_training$training_response
+reduced_training_predictors <- reduced_training[,2:32]
+
 
 # Linear Classification Models -------------------------------------------------
 
