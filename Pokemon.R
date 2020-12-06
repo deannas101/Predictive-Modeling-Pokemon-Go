@@ -223,13 +223,17 @@ training_response <- as.factor(training_response)
 testing_response <- as.factor(testing_response)
 
 #removing observations that only occur once
-r <- training_response %>%
-  group_by(pokemonId) %>%
+training_response_single_observations <- training_response_d %>%
+  group_by(training_response) %>%
   tally() %>%
   filter(n == 1) %>%
   select(-n)
 
-c <-as.character(r$training_response)
+c <- as.character(training_response_single_observations$training_response)
+
+training_response_no_single_obersvations <-  training_response_d %>%
+  filter(response_pokemon != c)
+
 reduced_response <- training_response %>%
   filter(training_response != c)
 reduced_predictors <- training_predictors %>%
