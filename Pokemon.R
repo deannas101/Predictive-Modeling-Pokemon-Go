@@ -194,18 +194,6 @@ response_pokemon[response_pokemon == 149] <- "Dragonite"
 response_pokemon[response_pokemon == 150] <- "Mewtwo"
 response_pokemon[response_pokemon == 151] <- "Mew"
 
-
-#removing observations that only occur once
-r <- response_pokemon %>%
-  group_by(response_pokemon) %>%
-  tally() %>%
-  filter(n == 1) %>%
-  select(-n)
-
-c <-as.character(r$response_pokemon)
-d <- response_pokemon %>%
-  filter(response_pokemon != c)
-
 # Data Splitting ---------------------------------------------------------------
 
 # Check Response Balance
@@ -216,7 +204,7 @@ ggplot(data = response_pokemon) +
 # Data Splitting using Stratified Random Sampling
 set.seed(1234)
 
-subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .01, list = FALSE)
+subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .25, list = FALSE)
 response_subset <- response_pokemon[subset_rows, ]
 pokemon_subset <- prepared_pokemon[subset_rows, ]
 
@@ -233,6 +221,19 @@ testing_response <- response_subset[-training_rows, ] # obs: 59196 columns: 1
 
 training_response <- as.factor(training_response)
 testing_response <- as.factor(testing_response)
+
+#removing observations that only occur once
+r <- training_response %>%
+  group_by(pokemonId) %>%
+  tally() %>%
+  filter(n == 1) %>%
+  select(-n)
+
+c <-as.character(r$training_response)
+reduced_response <- training_response %>%
+  filter(training_response != c)
+reduced_predictors <- training_predictors %>%
+  filter(training_predictors != c)
 
 # Linear Classification Models -------------------------------------------------
 
