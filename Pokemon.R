@@ -236,6 +236,7 @@ reduced_training_response <- reduced_training$training_response
 reduced_training_predictors <- reduced_training[,2:32]
 
 #making factors
+training_response <- as.factor(training_response)
 reduced_training_response <- as.factor(reduced_training_response)
 testing_response <- as.factor(testing_response)
 
@@ -354,8 +355,8 @@ ctrl_nonLinear_models <- trainControl(
 )
 set.seed(123)
 qda_model <- train(
-  x = training_predictors,
-  y = training_response,
+  x = reduced_training_predictors,
+  y = reduced_training_response,
   method = "qda",
   metric = "Kappa",
   trControl = ctrl_nonLinear_models
@@ -510,8 +511,8 @@ confusionMatrix(
 
 # Naive Bayes NEED TO REMOVE SINGLE OBSERVATIONS
 set.seed(123)
-nb_model <- train( x = training_predictors, 
-                y = training_response,
+nb_model <- train( x = reduced_training_predictors, 
+                y = reduced_training_response,
                 method = "nb",
                 metric = "Kappa",
                 tuneGrid = data.frame(.fL = 2,.usekernel = TRUE,.adjust = TRUE),
