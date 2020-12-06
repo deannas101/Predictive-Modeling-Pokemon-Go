@@ -219,9 +219,6 @@ training_response <- response_subset[training_rows, ] # obs: 23676 columns: 1
 testing_predictors <- pokemon_subset[-training_rows, ] # obs: 59196 columns: 31
 testing_response <- response_subset[-training_rows, ] # obs: 59196 columns: 1
 
-training_response <- as.factor(training_response)
-testing_response <- as.factor(testing_response)
-
 #removing observations that only occur once
 combined_training <- data.frame(training_response, training_predictors)
 
@@ -238,6 +235,9 @@ reduced_training <- combined_training[!combined_training$training_response %in% 
 reduced_training_response <- reduced_training$training_response
 reduced_training_predictors <- reduced_training[,2:32]
 
+#making factors
+reduced_training_response <- as.factor(reduced_training_response)
+testing_response <- as.factor(testing_response)
 
 # Linear Classification Models -------------------------------------------------
 
