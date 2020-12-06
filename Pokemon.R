@@ -194,6 +194,18 @@ response_pokemon[response_pokemon == 149] <- "Dragonite"
 response_pokemon[response_pokemon == 150] <- "Mewtwo"
 response_pokemon[response_pokemon == 151] <- "Mew"
 
+
+#removing observations that only occur once
+r <- response_pokemon %>%
+  group_by(response_pokemon) %>%
+  tally() %>%
+  filter(n == 1) %>%
+  select(-n)
+
+c <-as.character(r$response_pokemon)
+d <- response_pokemon %>%
+  filter(response_pokemon != c)
+
 # Data Splitting ---------------------------------------------------------------
 
 # Check Response Balance
