@@ -527,3 +527,13 @@ confusionMatrix(
   data = nb_model$pred$pred,
   reference = nb_model$pred$obs
 )
+
+#Predictions ----------------------------------------------------
+#predicting on testing side for two best models
+pred <- predict(model, obs = testing_predictors)
+postResample(pred = pred, obs = testing_response)
+
+#confusion matrix for two best models
+confusionMatrix(data = model$pred$pred,
+                reference = model$pred$obs)
+
