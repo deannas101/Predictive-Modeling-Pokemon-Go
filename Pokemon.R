@@ -326,8 +326,8 @@ glmnGrid <- expand.grid(
 
 set.seed(123)
 penalized_model <- train(
-  x = training_predictors,
-  y = training_response,
+  x = reduced_training_predictors,
+  y = reduced_training_response,
   method = "glmnet",
   tuneGrid = glmnGrid,
   metric = "Kappa",
