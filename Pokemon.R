@@ -531,22 +531,22 @@ confusionMatrix(
 #Predictions ----------------------------------------------------
 
 #predicting on testing side for two best models
-pred1 <- predict(model1, newdata = testing_predictors)
+pred1 <- predict(knn_model, newdata = testing_predictors)
 postResample(pred = pred1, obs = testing_response)
 
-pred2 <- predict(model2, obs = testing_predictors)
+pred2 <- predict(nb_model, obs = testing_predictors)
 postResample(pred = pred2, obs = testing_response)
 
 #confusion matrix for two best models
 confusionMatrix(data = knn_model$pred$pred,
                 reference = knn_model$pred$obs)
 
-confusionMatrix(data = model2$pred$pred,
-                reference = model2$pred$obs)
+confusionMatrix(data = nb_model$pred$pred,
+                reference = nb_model$pred$obs)
 
 # variance importance
 imp1 <- varImp(knn_model, scale = FALSE)
 plot(imp1, top = 5, main = "K-nearest Neighbor")
 
-imp2 <- varImp(model2, scale = FALSE)
+imp2 <- varImp(nb_model, scale = FALSE)
 plot(imp2, top = 5, main = "model2")
