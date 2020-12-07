@@ -530,14 +530,15 @@ confusionMatrix(
 
 #Predictions ----------------------------------------------------
 #predicting on testing side for two best models
-pred <- predict(model, obs = testing_predictors)
-postResample(pred = pred, obs = testing_response)
+pred1 <- predict(model1, obs = testing_predictors)
+postResample(pred = pred1, obs = testing_response)
+
+pred2 <- predict(model2, obs = testing_predictors)
+postResample(pred = pred2, obs = testing_response)
 
 #confusion matrix for two best models
-confusionMatrix(data = model$pred$pred,
-                reference = model$pred$obs)
+confusionMatrix(data = model1$pred$pred,
+                reference = model1$pred$obs)
 
-#important variables
-important_variables_modelName <- varImp(model, scale = FALSE)
-dev.off()
-plot(important_variables_modelName, top = 20)
+confusionMatrix(data = model2$pred$pred,
+                reference = model2$pred$obs)
