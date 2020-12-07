@@ -204,7 +204,7 @@ ggplot(data = response_pokemon) +
 # Data Splitting using Stratified Random Sampling
 set.seed(1234)
 
-subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .01, list = FALSE)
+subset_rows <- createDataPartition(response_pokemon$pokemonId, p = .25, list = FALSE)
 response_subset <- response_pokemon[subset_rows, ]
 pokemon_subset <- prepared_pokemon[subset_rows, ]
 
@@ -554,8 +554,8 @@ confusionMatrix(
 )
 
 # variance importance
-imp1 <- varImp(knn_model, estimate = "Kappa", scale = FALSE)
+imp1 <- filterVarImp(knn_model, estimate = "Kappa", scale = FALSE)
 plot(imp1, top = 5, main = "K-nearest Neighbor")
 
 imp2 <- varImp(nb_model, scale = FALSE)
-plot(imp2, top = 5, main = "model2")
+plot(imp2, top = 5, main = "Naive Bayes Model")
