@@ -219,7 +219,7 @@ training_response <- response_subset[training_rows, ] # obs: 23676 columns: 1
 testing_predictors <- pokemon_subset[-training_rows, ] # obs: 59196 columns: 31
 testing_response <- response_subset[-training_rows, ] # obs: 59196 columns: 1
 
-#removing observations that only occur once
+# removing observations that only occur once
 combined_training <- data.frame(training_response, training_predictors)
 
 training_single_observations <- combined_training %>%
@@ -233,9 +233,9 @@ c <- as.character(training_single_observations$training_response)
 reduced_training <- combined_training[!combined_training$training_response %in% c, ]
 
 reduced_training_response <- reduced_training$training_response
-reduced_training_predictors <- reduced_training[,2:32]
+reduced_training_predictors <- reduced_training[, 2:32]
 
-#making factors
+# making factors
 training_response <- as.factor(training_response)
 reduced_training_response <- as.factor(reduced_training_response)
 testing_response <- as.factor(testing_response)
@@ -468,16 +468,19 @@ confusionMatrix(
 
 # Support Vector Machines
 sigmaRangeReduced <- sigest(as.matrix(training_predictors))
-svmRGridReduced <- expand.grid(.sigma = sigmaRangeReduced[1],
-                               .C = 2^(seq(-4, 6)))
+svmRGridReduced <- expand.grid(
+  .sigma = sigmaRangeReduced[1],
+  .C = 2^(seq(-4, 6))
+)
 set.seed(123)
-svm_model <- train(x = training_predictors,
-                   y = training_response,
-                   method = "svmRadial",
-                   metric = "Kappa",
-                   tuneGrid = svmRGridReduced,
-                   fit = FALSE,
-                   trainControl = ctrl_nonLinear_models
+svm_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "svmRadial",
+  metric = "Kappa",
+  tuneGrid = svmRGridReduced,
+  fit = FALSE,
+  trainControl = ctrl_nonLinear_models
 )
 
 svm_model
@@ -491,13 +494,14 @@ confusionMatrix(
 
 # K-Nearest Neighbors
 set.seed(123)
-knn_model <- train(x = training_predictors,
-                y = training_response,
-                method = "knn",
-                metric = "Kappa",
-                ##tuneGrid = data.frame(.k = c(4*(0:5)+1, 20*(1:5)+1, 50*(2:9)+1)), ## 21 is the best
-                tuneGrid = data.frame(.k = 1:50),
-                trControl = ctrl_nonLinear_models
+knn_model <- train(
+  x = training_predictors,
+  y = training_response,
+  method = "knn",
+  metric = "Kappa",
+  ## tuneGrid = data.frame(.k = c(4*(0:5)+1, 20*(1:5)+1, 50*(2:9)+1)), ## 21 is the best
+  tuneGrid = data.frame(.k = 1:50),
+  trControl = ctrl_nonLinear_models
 )
 
 knn_model
@@ -511,12 +515,13 @@ confusionMatrix(
 
 # Naive Bayes NEED TO REMOVE SINGLE OBSERVATIONS
 set.seed(123)
-nb_model <- train( x = reduced_training_predictors,
-                y = reduced_training_response,
-                method = "nb",
-                metric = "Kappa",
-                tuneGrid = data.frame(.fL = 2,.usekernel = TRUE,.adjust = TRUE),
-                trControl = ctrl_nonLinear_models
+nb_model <- train(
+  x = reduced_training_predictors,
+  y = reduced_training_response,
+  method = "nb",
+  metric = "Kappa",
+  tuneGrid = data.frame(.fL = 2, .usekernel = TRUE, .adjust = TRUE),
+  trControl = ctrl_nonLinear_models
 )
 
 nb_model
@@ -528,24 +533,28 @@ confusionMatrix(
   reference = nb_model$pred$obs
 )
 
-#Predictions ----------------------------------------------------
+# Predictions ----------------------------------------------------
 
-#predicting on testing side for two best models
+# predicting on testing side for two best models
 pred1 <- predict(knn_model, newdata = testing_predictors)
 postResample(pred = pred1, obs = testing_response)
 
 pred2 <- predict(nb_model, obs = testing_predictors)
 postResample(pred = pred2, obs = testing_response)
 
-#confusion matrix for two best models
-confusionMatrix(data = knn_model$pred$pred,
-                reference = knn_model$pred$obs)
+# confusion matrix for two best models
+confusionMatrix(
+  data = knn_model$pred$pred,
+  reference = knn_model$pred$obs
+)
 
-confusionMatrix(data = nb_model$pred$pred,
-                reference = nb_model$pred$obs)
+confusionMatrix(
+  data = nb_model$pred$pred,
+  reference = nb_model$pred$obs
+)
 
 # variance importance
-imp1 <- varImp(knn_model, scale = FALSE)
+imp1 <- varImp(knn_model, estimate = "Kappa", scale = FALSE)
 plot(imp1, top = 5, main = "K-nearest Neighbor")
 
 imp2 <- varImp(nb_model, scale = FALSE)
