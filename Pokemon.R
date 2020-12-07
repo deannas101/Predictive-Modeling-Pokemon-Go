@@ -530,7 +530,7 @@ confusionMatrix(
 
 #Predictions ----------------------------------------------------
 #predicting on testing side for two best models
-pred1 <- predict(model1, obs = testing_predictors)
+pred1 <- predict(model1, newdata = testing_predictors)
 postResample(pred = pred1, obs = testing_response)
 
 pred2 <- predict(model2, obs = testing_predictors)
