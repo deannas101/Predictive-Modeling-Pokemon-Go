@@ -537,3 +537,7 @@ postResample(pred = pred, obs = testing_response)
 confusionMatrix(data = model$pred$pred,
                 reference = model$pred$obs)
 
+#important variables
+important_variables_modelName <- varImp(model, scale = FALSE)
+dev.off()
+plot(important_variables_modelName, top = 20)
