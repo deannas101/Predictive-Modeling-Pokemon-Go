@@ -471,7 +471,7 @@ sigmaRangeReduced <- sigest(as.matrix(training_predictors))
 svmRGridReduced <- expand.grid(.sigma = sigmaRangeReduced[1],
                                .C = 2^(seq(-4, 6)))
 set.seed(123)
-svm_model <- train(x = training_predictors, 
+svm_model <- train(x = training_predictors,
                    y = training_response,
                    method = "svmRadial",
                    metric = "Kappa",
@@ -491,7 +491,7 @@ confusionMatrix(
 
 # K-Nearest Neighbors
 set.seed(123)
-knn_model <- train(x = training_predictors, 
+knn_model <- train(x = training_predictors,
                 y = training_response,
                 method = "knn",
                 metric = "Kappa",
@@ -511,7 +511,7 @@ confusionMatrix(
 
 # Naive Bayes NEED TO REMOVE SINGLE OBSERVATIONS
 set.seed(123)
-nb_model <- train( x = reduced_training_predictors, 
+nb_model <- train( x = reduced_training_predictors,
                 y = reduced_training_response,
                 method = "nb",
                 metric = "Kappa",
@@ -531,8 +531,8 @@ confusionMatrix(
 #Predictions ----------------------------------------------------
 
 #predicting on testing side for two best models
-pred1 <- predict(knn_model, newdata = testing_predictors)
-postResample(pred1, testing_response)
+pred1 <- predict(model1, newdata = testing_predictors)
+postResample(pred = pred1, obs = testing_response)
 
 pred2 <- predict(model2, obs = testing_predictors)
 postResample(pred = pred2, obs = testing_response)
